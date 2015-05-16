@@ -114,7 +114,7 @@ namespace ServerPushHttpHandler
         #region 保持长连接,Comet 技术的关键，通过Ajax（long-polling）保持长连接
         private void Keepline()
         {
-            // 服务器阻塞，直到有数据传递或者超时，我们看到本方法没有调用 _IAsyncResult.Send(),正是要形成服务器阻塞，知道真的有是数据，或者超时主动调用Send()
+            // 完全占用Asp.net 工作线程，阻塞服务器返回，直到其他Action要返回数据，没有超时的可能，下一步就是要利用自定义线程解决 占用asp.net工资线程的问题。
             if (!dict.ContainsKey(sdk.User.UserId))
                 dict.Add(sdk.User.UserId, _IAsyncResult);
             else            
@@ -152,7 +152,7 @@ namespace ServerPushHttpHandler
                 Content = m_Context.Request["Content"]
             };
             string result = sdk.Send_Msg(message);
-            //  下面部分是Comet推送给对方页面显示的
+            //  下面部分是Comet推送给对方页面显示的，这里最好做成发布事件
             if (dict.ContainsKey(message.ReciveUserId))
             {
                 dict[message.ReciveUserId].Result = result;
